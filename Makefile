@@ -18,7 +18,7 @@ SERVE_PORT   ?= 8080
 DIST_DIR     ?= dist
 SITE_CHECK   ?= scripts/check-site.sh
 
-.PHONY: help install dev build preview serve typecheck check audit clean distclean
+.PHONY: help install dev build preview serve typecheck check assets audit clean distclean
 
 help: ## Show this help
 	@printf '\nFHIR 3D 互動式教學手冊 — available targets\n\n'
@@ -47,6 +47,9 @@ serve: ## Serve an existing dist/ over HTTP on http://localhost:8080
 
 check: typecheck build ## Type-check, build, then run the static-site preflight
 	bash $(SITE_CHECK) $(DIST_DIR)
+
+assets: ## Regenerate public/ icons and the social card (needs Chrome + Python Pillow)
+	bash scripts/build-assets.sh
 
 audit: ## Report known vulnerabilities in the dependency tree
 	$(NPM) audit

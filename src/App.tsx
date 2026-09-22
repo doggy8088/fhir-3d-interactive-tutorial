@@ -24,6 +24,7 @@ function Nav() {
 
   return (
     <nav
+      aria-label="主要導覽"
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
         scrolled ? "glass py-3" : "bg-transparent py-5"
       }`}
@@ -63,10 +64,13 @@ export default function App() {
 
   return (
     <div className="relative">
+      <a href="#main" className="skip-link">
+        跳至主要內容
+      </a>
       <Nav />
       <Hero selected={selected} onSelect={setSelected} />
-      <main className="relative">
-        <div className="pointer-events-none absolute inset-0 grid-fade" />
+      <main id="main" tabIndex={-1} className="relative outline-none">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid-fade" />
         <div className="relative">
           <WhatIsFhir />
           <div className="shell divider" />

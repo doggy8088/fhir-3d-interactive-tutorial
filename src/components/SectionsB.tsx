@@ -87,17 +87,15 @@ export function PersonalPath() {
         <div>
           <ol className="relative ml-3 border-l border-cyan/25 pl-8">
             {PERSONAL_STEPS.map((s, i) => (
-              <Reveal key={s.title} delay={i * 90}>
-                <li className="relative pb-9 last:pb-0">
-                  <span className="tl-dot absolute -left-[41px] top-1 h-3.5 w-3.5 rounded-full bg-cyan" />
-                  <div className="display absolute -left-[92px] top-0 hidden w-14 text-right text-4xl font-bold text-white/8 md:block">
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-                  <h3 className="text-[15.5px] font-bold text-ink">
-                    <span className="text-cyan">{String(i + 1).padStart(2, "0")}.</span> {s.title}
-                  </h3>
-                  <p className="mt-1.5 max-w-md text-[13px] leading-6.5 text-muted">{s.desc}</p>
-                </li>
+              <Reveal as="li" key={s.title} delay={i * 90} className="relative pb-9 last:pb-0">
+                <span className="tl-dot absolute -left-[41px] top-1 h-3.5 w-3.5 rounded-full bg-cyan" />
+                <div className="display absolute -left-[92px] top-0 hidden w-14 text-right text-4xl font-bold text-white/8 md:block">
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <h3 className="text-[15.5px] font-bold text-ink">
+                  <span className="text-cyan">{String(i + 1).padStart(2, "0")}.</span> {s.title}
+                </h3>
+                <p className="mt-1.5 max-w-md text-[13px] leading-6.5 text-muted">{s.desc}</p>
               </Reveal>
             ))}
           </ol>
@@ -239,6 +237,7 @@ export function Versions() {
             <Reveal key={x.key} delay={i * 80}>
               <button
                 onClick={() => setActive(x.key)}
+                aria-pressed={active === x.key}
                 className="card w-full p-5 text-left transition"
                 style={active === x.key ? { borderColor: `${x.accent}88`, background: `${x.accent}0d` } : undefined}
               >
@@ -407,7 +406,7 @@ export function Footer() {
               3D 互動式教學手冊——涵蓋 Resource、REST API、個人認證、產品 Conformance Testing 與版本實務。
               內容為教育用途整理，規範細節請以 HL7 官方文件為準。
             </p>
-            <p className="mt-5 font-mono text-[11px] tracking-wider text-muted/60">
+            <p className="mt-5 font-mono text-[11px] tracking-wider text-muted/80">
               HL7 INTERNATIONAL · FAST HEALTHCARE INTEROPERABILITY RESOURCES
             </p>
           </div>
@@ -433,8 +432,8 @@ export function Footer() {
           </div>
         </div>
         <div className="divider mt-12" />
-        <p className="mt-6 text-center font-mono text-[11px] tracking-wider text-muted/50">
-          本手冊資料以 HL7、FHIR Foundation 與衛生福利部之公開資訊為基礎 · 2026
+        <p className="mt-6 text-center font-mono text-[11px] tracking-wider text-muted/80">
+          本手冊資料以 HL7、FHIR Foundation 與衛生福利部之公開資訊為基礎 · © 2026 Will 保哥（doggy8088）· FHIR® 為 HL7 註冊商標
         </p>
       </div>
     </footer>

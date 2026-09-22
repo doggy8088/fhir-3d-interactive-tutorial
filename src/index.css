@@ -20,6 +20,7 @@
   --bg-2: #070d17;
   --line: rgba(120, 190, 220, 0.14);
   --panel: rgba(9, 17, 29, 0.62);
+  color-scheme: dark;
 }
 
 html {
@@ -31,6 +32,32 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   overflow-x: hidden;
+}
+
+/* ---------- keyboard access ---------- */
+:where(a, button, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.85rem;
+  left: 0.85rem;
+  z-index: 100;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  border-radius: 0.75rem;
+  background: #0b1620;
+  color: var(--color-ink);
+  font-weight: 700;
+  transform: translateY(-220%);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
 }
 
 ::selection {
@@ -248,4 +275,30 @@ body {
 .divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(120, 220, 255, 0.35), transparent);
+}
+
+/* ---------- motion preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .float-slow,
+  .scroll-cue-dot,
+  .blink-caret::after {
+    animation: none;
+  }
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import FhirScene, { type FxState } from "../three/scene";
 import { POST_OBSERVATION_SAMPLE, RESOURCES, TERMINAL_PRESETS } from "../data/fhir";
+import { useOnScreen, usePrefersReducedMotion } from "../utils/usePrefersReducedMotion";
 
 type Entry = {
   id: number;
@@ -25,6 +26,9 @@ export default function Hero({
   const [entries, setEntries] = useState<Entry[]>([]);
   const controlsRef = useRef<any>(null);
   const didAuto = useRef(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const reducedMotion = usePrefersReducedMotion();
+  const heroOnScreen = useOnScreen(heroRef);
 
   const onArrive = useCallback((id: number) => {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, done: true } : e)));
@@ -79,21 +83,29 @@ export default function Hero({
   const sel = selected ? RESOURCES.find((r) => r.id === selected) ?? null : null;
 
   return (
-    <header id="top" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
-      {/* 3D canvas */}
-      <div className="absolute inset-0">
+    <header id="top" ref={heroRef} className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
+      {/* 3D canvas — decorative for assistive tech; section 02 repeats the data as DOM controls */}
+      <div aria-hidden="true" className="absolute inset-0">
         <Canvas
           dpr={[1, 1.8]}
           camera={{ position: [0, 2.6, 10.2], fov: 42 }}
           gl={{ antialias: true }}
+          frameloop={heroOnScreen ? "always" : "never"}
           onPointerMissed={() => onSelect(null)}
         >
-          <FhirScene selected={selected} onSelect={onSelect} fx={fx} onArrive={onArrive} controlsRef={controlsRef} />
+          <FhirScene
+            selected={selected}
+            onSelect={onSelect}
+            fx={fx}
+            onArrive={onArrive}
+            controlsRef={controlsRef}
+            reducedMotion={reducedMotion}
+          />
         </Canvas>
       </div>
 
       {/* bottom fade into page */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#04070d]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#04070d]" />
 
       {/* title */}
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-10">
@@ -158,7 +170,7 @@ export default function Hero({
               {sel.name}
             </span>
             <span className="text-[12px] text-muted">{sel.purpose}</span>
-            <button onClick={() => onSelect(null)} className="ml-1 text-muted hover:text-ink">
+            <button onClick={() => onSelect(null)} aria-label="關閉節點說明" className="ml-1 text-muted hover:text-ink">
               ✕
             </button>
           </div>
@@ -186,7 +198,7 @@ export default function Hero({
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2 px-4 pt-3">
+          <div role="group" aria-label="範例請求" className="flex flex-wrap gap-2 px-4 pt-3">
             {TERMINAL_PRESETS.map((p) => (
               <button
                 key={p.method + p.path}
@@ -199,7 +211,12 @@ export default function Hero({
             ))}
           </div>
 
-          <div className="flex max-h-[240px] flex-col-reverse gap-3 overflow-y-auto px-4 py-3">
+          <div
+            role="log"
+            aria-live="polite"
+            aria-label="FHIR 請求與回應紀錄"
+            className="flex max-h-[240px] flex-col-reverse gap-3 overflow-y-auto px-4 py-3"
+          >
             {entries.length === 0 && (
               <p className="blink-caret font-mono text-[12.5px] text-muted">
                 輸入一個 FHIR 請求，看資料如何在節點與 API 核心之間流動
@@ -217,7 +234,12 @@ export default function Hero({
                       <span className="font-bold text-mint">{e.status} {e.statusNote}</span>
                       <span className="text-muted"> · application/fhir+json</span>
                     </p>
-                    <pre className="codeblock mt-1.5 max-h-[150px] overflow-auto px-3.5 py-2.5 text-[11px] leading-5.5">
+                    <pre
+                      tabIndex={0}
+                      role="group"
+                      aria-label="FHIR 回應內容"
+                      className="codeblock mt-1.5 max-h-[150px] overflow-auto px-3.5 py-2.5 text-[11px] leading-5.5"
+                    >
                       {e.body.split("\n").map((l, i) => (
                         <span key={i} className="term-line block" style={{ animationDelay: `${140 + i * 55}ms` }}>
                           {l}
@@ -239,16 +261,19 @@ export default function Hero({
 
       {/* controls hint */}
       <div className="pointer-events-none absolute bottom-5 right-5 z-10 hidden flex-col items-end gap-1 text-right lg:flex">
-        <span className="font-mono text-[11px] tracking-wider text-muted/80">
+        <span className="font-mono text-[11px] tracking-wider text-muted/90">
           拖曳旋轉 · 滾輪縮放 · 點擊節點探索
         </span>
-        <span className="font-mono text-[11px] tracking-wider text-muted/50">
+        <span className="font-mono text-[11px] tracking-wider text-muted/70">
           5 RESOURCES · 1 API CORE · R4
         </span>
       </div>
 
       {/* scroll cue */}
-      <div className="pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex lg:left-auto lg:right-[560px] lg:translate-x-0">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex lg:left-auto lg:right-[560px] lg:translate-x-0"
+      >
         <div className="flex h-9 w-5.5 items-start justify-center rounded-full border border-white/20 p-1.5">
           <span className="scroll-cue-dot h-1.5 w-1.5 rounded-full bg-cyan" />
         </div>

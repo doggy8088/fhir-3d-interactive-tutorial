@@ -164,6 +164,7 @@ export function ResourcesSection({
           <Reveal key={r.id} delay={i * 70} className="h-full">
             <button
               onClick={() => setActive(r.id)}
+              aria-pressed={active === r.id}
               className="card h-full w-full p-4 text-left"
               style={active === r.id ? { borderColor: `${r.color}88`, background: `${r.color}0d` } : undefined}
             >
@@ -249,7 +250,7 @@ export function Beyond() {
       no="03"
       eyebrow="Ecosystem"
       title="基礎標準之上，還有一整套生態"
-      intro="FHIR 本身只提供基礎標準。真正的互通性，建立在下列四層之上——这也是為什麼兩個「支援 FHIR」的系統仍可能對不上。"
+      intro="FHIR 本身只提供基礎標準。真正的互通性，建立在下列四層之上——這也是為什麼兩個「支援 FHIR」的系統仍可能對不上。"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {LAYERS.map((l, i) => (

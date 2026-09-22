@@ -14,6 +14,7 @@ type SceneProps = {
   fx: React.MutableRefObject<FxState>;
   onArrive: (id: number) => void;
   controlsRef: React.MutableRefObject<any>;
+  reducedMotion: boolean;
 };
 
 /* ---------------- label textures (canvas → sprite) ---------------- */
@@ -66,11 +67,13 @@ function ResourceNode({
   res,
   index,
   selected,
+  reducedMotion,
   onSelect,
 }: {
   res: ResourceData;
   index: number;
   selected: boolean;
+  reducedMotion: boolean;
   onSelect: (id: string) => void;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -121,10 +124,17 @@ function ResourceNode({
     const targetScale = selected ? 1.24 : hovered ? 1.1 : 1;
     const s = THREE.MathUtils.damp(g.scale.x, targetScale, 8, delta);
     g.scale.setScalar(s);
-    const targetGlow = selected ? 1.5 : hovered ? 1.0 : 0.55 + Math.sin(t * 2 + index) * 0.12;
+    const targetGlow = selected
+      ? 1.5
+      : hovered
+        ? 1.0
+        : reducedMotion
+          ? 0.6
+          : 0.55 + Math.sin(t * 2 + index) * 0.12;
     mat.emissiveIntensity = THREE.MathUtils.damp(mat.emissiveIntensity, targetGlow, 6, delta);
     if (ring.current) {
-      ring.current.rotation.z += delta * (selected ? 1.4 : 0.35);
+      const ringSpeed = selected ? 1.4 : reducedMotion ? 0 : 0.35;
+      ring.current.rotation.z += delta * ringSpeed;
       const targetOp = selected ? 0.9 : hovered ? 0.45 : 0;
       ringMat.opacity = THREE.MathUtils.damp(ringMat.opacity, targetOp, 7, delta);
       ring.current.visible = ringMat.opacity > 0.02;
@@ -180,7 +190,7 @@ function ResourceNode({
 
 /* ---------------- central FHIR core ---------------- */
 
-function FhirCore() {
+function FhirCore({ reducedMotion }: { reducedMotion: boolean }) {
   const inner = useRef<THREE.Mesh>(null);
   const wire = useRef<THREE.Mesh>(null);
   const rings = useRef<THREE.Mesh[]>([]);
@@ -190,19 +200,20 @@ function FhirCore() {
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
+    const spin = reducedMotion ? 0 : delta;
     if (inner.current) {
-      inner.current.rotation.y += delta * 0.4;
-      inner.current.rotation.x += delta * 0.12;
+      inner.current.rotation.y += spin * 0.4;
+      inner.current.rotation.x += spin * 0.12;
     }
     if (wire.current) {
-      wire.current.rotation.y -= delta * 0.18;
-      wire.current.rotation.z += delta * 0.07;
+      wire.current.rotation.y -= spin * 0.18;
+      wire.current.rotation.z += spin * 0.07;
     }
     const r = rings.current;
-    if (r[0]) r[0].rotation.z += delta * 0.5;
-    if (r[1]) r[1].rotation.x += delta * 0.35;
-    if (r[2]) r[2].rotation.y += delta * 0.28;
-    if (light.current) light.current.intensity = 5.5 + Math.sin(t * 2.1) * 1.6;
+    if (r[0]) r[0].rotation.z += spin * 0.5;
+    if (r[1]) r[1].rotation.x += spin * 0.35;
+    if (r[2]) r[2].rotation.y += spin * 0.28;
+    if (light.current) light.current.intensity = reducedMotion ? 5.5 : 5.5 + Math.sin(t * 2.1) * 1.6;
   });
 
   return (
@@ -406,7 +417,7 @@ function PacketLayer({ fx, onArrive }: { fx: React.MutableRefObject<FxState>; on
 
 /* ---------------- data lines + motes ---------------- */
 
-function DataLines({ selected }: { selected: string | null }) {
+function DataLines({ selected, reducedMotion }: { selected: string | null; reducedMotion: boolean }) {
   const hiRefs = useRef<(any)[]>([]);
   const motes = useRef<(THREE.Mesh | null)[]>([]);
 
@@ -420,7 +431,7 @@ function DataLines({ selected }: { selected: string | null }) {
       }
       const m = motes.current[i];
       if (m) {
-        const phase = (t * 0.16 + i / RESOURCES.length) % 1;
+        const phase = reducedMotion ? 0.5 : (t * 0.16 + i / RESOURCES.length) % 1;
         const e = easeInOut(phase);
         const a = NODE_POS[i];
         m.position.set(
@@ -428,7 +439,7 @@ function DataLines({ selected }: { selected: string | null }) {
           a[1] + (CORE_POS[1] - a[1]) * e + Math.sin(e * Math.PI) * 0.3,
           a[2] + (CORE_POS[2] - a[2]) * e
         );
-        (m.material as THREE.MeshBasicMaterial).opacity = 0.15 + Math.sin(phase * Math.PI) * 0.75;
+        (m.material as THREE.MeshBasicMaterial).opacity = reducedMotion ? 0.3 : 0.15 + Math.sin(phase * Math.PI) * 0.75;
       }
     });
   });
@@ -474,14 +485,18 @@ function easeInOut(t: number) {
 
 /* ---------------- scene root ---------------- */
 
-export default function FhirScene({ selected, onSelect, fx, onArrive, controlsRef }: SceneProps) {
+export default function FhirScene({ selected, onSelect, fx, onArrive, controlsRef, reducedMotion }: SceneProps) {
   const root = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (root.current) {
-      root.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.07) * 0.05;
-      root.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.04;
+    if (!root.current) return;
+    if (reducedMotion) {
+      root.current.rotation.y = 0;
+      root.current.position.y = 0;
+      return;
     }
+    root.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.07) * 0.05;
+    root.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.04;
   });
 
   return (
@@ -495,17 +510,40 @@ export default function FhirScene({ selected, onSelect, fx, onArrive, controlsRe
       <pointLight position={[7, 3, -6]} intensity={7} distance={18} color="#ff6b6b" decay={2} />
 
       <group ref={root}>
-        <FhirCore />
-        <DataLines selected={selected} />
+        <FhirCore reducedMotion={reducedMotion} />
+        <DataLines selected={selected} reducedMotion={reducedMotion} />
         {RESOURCES.map((r, i) => (
-          <ResourceNode key={r.id} res={r} index={i} selected={selected === r.id} onSelect={onSelect} />
+          <ResourceNode
+            key={r.id}
+            res={r}
+            index={i}
+            selected={selected === r.id}
+            reducedMotion={reducedMotion}
+            onSelect={onSelect}
+          />
         ))}
         <PacketLayer fx={fx} onArrive={onArrive} />
         <Platform />
       </group>
 
-      <ParticleCloud count={750} inner={7} outer={16} color="#3aa9c9" size={0.05} opacity={0.5} speed={0.012} />
-      <ParticleCloud count={280} inner={5.5} outer={13} color="#f5a524" size={0.07} opacity={0.3} speed={-0.02} />
+      <ParticleCloud
+        count={750}
+        inner={7}
+        outer={16}
+        color="#3aa9c9"
+        size={0.05}
+        opacity={0.5}
+        speed={reducedMotion ? 0 : 0.012}
+      />
+      <ParticleCloud
+        count={280}
+        inner={5.5}
+        outer={13}
+        color="#f5a524"
+        size={0.07}
+        opacity={0.3}
+        speed={reducedMotion ? 0 : -0.02}
+      />
 
       <OrbitControls
         ref={controlsRef}
@@ -516,7 +554,7 @@ export default function FhirScene({ selected, onSelect, fx, onArrive, controlsRe
         maxDistance={15}
         minPolarAngle={0.35}
         maxPolarAngle={1.5}
-        autoRotate={!selected}
+        autoRotate={!selected && !reducedMotion}
         autoRotateSpeed={0.55}
         enableDamping
         dampingFactor={0.08}

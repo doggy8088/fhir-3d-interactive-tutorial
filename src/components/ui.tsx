@@ -1,35 +1,58 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { copyText } from "../utils/clipboard";
+
+function useRevealState() {
+  const [show, setShow] = useState(false);
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const observe = useCallback((node: Element | null) => {
+    observer.current?.disconnect();
+    observer.current = null;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      // Without IntersectionObserver the content must stay readable.
+      setShow(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShow(true);
+          io.disconnect();
+          observer.current = null;
+        }
+      },
+      { threshold: 0.12 }
+    );
+    io.observe(node);
+    observer.current = io;
+  }, []);
+
+  useEffect(() => () => observer.current?.disconnect(), []);
+
+  return { show, observe };
+}
 
 export function Reveal({
   children,
   delay = 0,
   className = "",
+  as: Tag = "div",
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
+  /** Use `li` when the wrapper is a direct child of `ol`/`ul`. */
+  as?: "div" | "li";
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setShow(true);
-          io.disconnect();
-        }
-      },
-      { threshold: 0.12 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+  const { show, observe } = useRevealState();
   return (
-    <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`reveal ${show ? "reveal-in" : ""} ${className}`}>
+    <Tag
+      ref={observe}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`reveal ${show ? "reveal-in" : ""} ${className}`}
+    >
       {children}
-    </div>
+    </Tag>
   );
 }
 
@@ -50,8 +73,9 @@ export function Section({
   children: ReactNode;
   className?: string;
 }) {
+  const titleId = `${id}-title`;
   return (
-    <section id={id} className={`relative scroll-mt-20 py-24 md:py-32 ${className}`}>
+    <section id={id} aria-labelledby={titleId} className={`relative scroll-mt-20 py-24 md:py-32 ${className}`}>
       <div className="shell">
         <Reveal>
           <div className="flex items-center gap-4">
@@ -59,7 +83,7 @@ export function Section({
             <span className="h-px w-12 bg-cyan/40" />
             <span className="eyebrow">{eyebrow}</span>
           </div>
-          <h2 className="display mt-5 text-3xl font-bold leading-tight tracking-tight text-ink md:text-[2.6rem]">
+          <h2 id={titleId} className="display mt-5 text-3xl font-bold leading-tight tracking-tight text-ink md:text-[2.6rem]">
             {title}
           </h2>
           {intro && <p className="mt-5 max-w-3xl text-[15px] leading-8 text-muted md:text-base">{intro}</p>}
@@ -98,16 +122,18 @@ export function Callout({
 }
 
 export function CodeBlock({ code, label }: { code: string; label?: string }) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
+  const timer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1400);
-    } catch {
-      /* clipboard unavailable */
-    }
+    const succeeded = await copyText(code);
+    setStatus(succeeded ? "copied" : "error");
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setStatus("idle"), succeeded ? 1400 : 5000);
   };
+
   return (
     <div className="codeblock overflow-hidden">
       <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
@@ -121,8 +147,11 @@ export function CodeBlock({ code, label }: { code: string; label?: string }) {
           onClick={copy}
           className="rounded-md border border-white/10 px-2.5 py-1 font-mono text-[11px] text-muted transition hover:border-cyan/50 hover:text-cyan"
         >
-          {copied ? "已複製" : "複製"}
+          {status === "copied" ? "已複製" : status === "error" ? "複製失敗，請手動選取" : "複製"}
         </button>
+        <span role="status" aria-live="polite" className="sr-only">
+          {status === "copied" ? "已複製到剪貼簿" : status === "error" ? "無法存取剪貼簿，請手動選取程式碼後複製" : ""}
+        </span>
       </div>
       <pre className="overflow-x-auto p-4 md:p-5">
         <code>{highlight(code)}</code>
