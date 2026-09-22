@@ -433,7 +433,16 @@ export function Footer() {
         </div>
         <div className="divider mt-12" />
         <p className="mt-6 text-center font-mono text-[11px] tracking-wider text-muted/80">
-          本手冊資料以 HL7、FHIR Foundation 與衛生福利部之公開資訊為基礎 · © 2026 Will 保哥（doggy8088）· FHIR® 為 HL7 註冊商標
+          本手冊資料以 HL7、FHIR Foundation 與衛生福利部之公開資訊為基礎 · © 2026{" "}
+          <a
+            href="https://www.facebook.com/will.fans/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-cyan/90 underline decoration-dotted underline-offset-4 transition hover:text-cyan hover:decoration-solid"
+          >
+            Will 保哥
+          </a>{" "}
+          · FHIR® 為 HL7 註冊商標
         </p>
       </div>
     </footer>
