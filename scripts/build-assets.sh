@@ -96,12 +96,13 @@ master = Image.open(master_path).convert("RGBA")
 if master.size != (512, 512):
     raise SystemExit(f"master icon must be 512×512, got {master.size}")
 
-for size in (16, 32, 48):
+for size in (16, 32):
     master.resize((size, size), Image.LANCZOS).save(assets / f"favicon-{size}.png")
 
 for size in (180, 192, 512):
+    scaled = master.resize((size, size), Image.LANCZOS)
     flat = Image.new("RGB", (size, size), "#04070d")
-    flat.paste(master.resize((size, size), Image.LANCZOS), (0, 0), master.resize((size, size), Image.LANCZOS))
+    flat.paste(scaled, (0, 0), scaled)
     name = {
         180: "apple-touch-icon.png",
         192: "icon-192.png",

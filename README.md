@@ -23,7 +23,7 @@
 
 ## 快速開始
 
-需求：Node.js 20 以上（CI 使用 24）、npm、`make`。
+需求：Node.js 20.19 以上（CI 使用 24）、npm、`make`。
 
 ```bash
 make install   # 安裝相依套件（npm ci）
@@ -91,7 +91,7 @@ GitHub Pages 設定：Source = **GitHub Actions**，自訂網域 = **fhir.gh.min
 - 唯一的 `<link rel="canonical">`、`og:url`、`twitter:image` 等皆使用絕對 HTTPS 網址（<https://fhir.gh.miniasp.com/>）。
 - `og:image` 為 1200×630 的 PNG（`public/assets/og-card.png`），檔案尺寸與宣告值一致，並提供 `og:image:alt`。
 - JSON-LD 使用 `WebApplication`，描述名稱、網址、語言、免費、授權與作者。
-- 圖示涵蓋 `favicon.svg`、`favicon.ico`（16/32/48）、PNG 16/32/48、`apple-touch-icon.png`（180）、PWA 192/512，並有 `site.webmanifest`（`start_url` 為 `/`）。
+- 圖示涵蓋 `favicon.svg`、`favicon.ico`（內含 16/32/48）、PNG 16/32、`apple-touch-icon.png`（180）、PWA 192/512，並有 `site.webmanifest`（`start_url` 為 `/`）。
 - `robots.txt` 與 `sitemap.xml` 指向正式網域。
 
 修改標題或視覺後，可用 `make assets` 重新產生圖示與社群卡片（需要 Chrome 與 Python Pillow）；社群平台會快取舊卡片，必要時得重新抓取。

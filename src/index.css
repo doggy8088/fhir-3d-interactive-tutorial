@@ -41,6 +41,12 @@ body {
   border-radius: 8px;
 }
 
+/* The skip link focuses this region programmatically — no ring around the page. */
+main:focus,
+main:focus-visible {
+  outline: none;
+}
+
 .skip-link {
   position: fixed;
   top: 0.85rem;
